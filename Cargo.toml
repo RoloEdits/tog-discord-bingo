@@ -1,0 +1,23 @@
+[package]
+name = "bingo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mimalloc = "0.1.42"
+arrayvec = "0.7.4"
+eframe = "0.27.2"
+egui_extras = "0.27.2"
+egui-modal = "0.3.6"
+rfd = "0.14.1"
+image = "0.25.1"
+umya-spreadsheet = "1.2.6"
+headless_chrome = "1.0.10"
+tempfile = "3.10.1"
+# thiserror = "*"
+
+# log = "*"
+# env_logger = { version = "0.10", default-features = false, features = [
+#     "auto-color",
+#     "humantime",
+# ] }
