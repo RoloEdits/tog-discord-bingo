@@ -465,7 +465,7 @@ impl eframe::App for Application {
                                         ui.colored_label(Color32::from_hex(color).expect("colors from spreadsheet should always be hex"),name);
                                     });
                                     row.col(|ui| {
-                                        ui.label(guess);
+                                        ui.label(format_guess(guess));
                                     });
                                 });
                             }
@@ -485,4 +485,17 @@ impl eframe::App for Application {
 
 fn key_fmt(key: &str) -> String {
     key.to_uppercase().replace('\n', " ")
+}
+
+fn format_guess(guess: &str) -> String {
+    let mut result = String::with_capacity(12 + 4);
+
+    for (count, ch) in guess.to_uppercase().replace(['\n' ,'/', 'A', 'B', 'C', ':', ' '], "").chars().enumerate() {
+        if count > 0 && count % 4 == 0 {
+            result.push(' ');
+        }
+        result.push(ch);
+    }
+
+    result
 }
