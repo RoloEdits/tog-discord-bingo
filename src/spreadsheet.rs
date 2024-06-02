@@ -15,6 +15,7 @@ pub fn read<P: AsRef<Path>>(path: P) -> Vec<(u32, String, String, String)> {
         };
 
         let username = cell.get_cell_value().get_value().to_string();
+
         let hex = cell
             .get_style()
             .get_font()
@@ -22,9 +23,17 @@ pub fn read<P: AsRef<Path>>(path: P) -> Vec<(u32, String, String, String)> {
             .get_color()
             .get_argb_with_theme(workbook.get_theme());
 
-        // NOTE: hex code includes alpha prefix. Just want the last 6 digits.
-        // Default to white if any issues occur.
-        let color = format!("#{}", &hex.get(2..).unwrap_or("FFFFFF"));
+        let color = if hex.len() == 6 {
+            if hex == "000000" {
+                "#f2f3f5".to_string()
+            } else {
+                format!("#{hex}")
+            }
+        } else if let Some(hex) = hex.get(2..) {
+            format!("#{hex}")
+        } else {
+            panic!("failed to truncate: `{hex}` for `{username}`");
+        };
 
         let guess = worksheet.get_value((2, row));
 
