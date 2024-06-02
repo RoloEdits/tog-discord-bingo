@@ -435,7 +435,7 @@ impl eframe::App for Application {
                             eframe::egui::Align::Center,
                         ))
                         .column(Column::auto())
-                        .column(Column::auto())
+                        .column(Column::initial(200.0))
                         .column(Column::auto())
                         .min_scrolled_height(0.0)
                         .max_scroll_height(available_height);
