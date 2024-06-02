@@ -490,7 +490,7 @@ fn key_fmt(key: &str) -> String {
 fn format_guess(guess: &str) -> String {
     let mut result = String::with_capacity(12 + 4);
 
-    for (count, ch) in guess.to_uppercase().replace(['\n' ,'/', 'A', 'B', 'C', ':', ' '], "").chars().enumerate() {
+    for (count, ch) in guess.to_uppercase().replace(['\n' ,'/', 'A', 'B', 'C', ':', ' ', '.'], "").chars().enumerate() {
         if count > 0 && count % 4 == 0 {
             result.push(' ');
         }
