@@ -14,7 +14,6 @@ use mimalloc::MiMalloc;
 static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() {
-
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_inner_size([815.0, 850.0]) // wide enough for the drag-drop overlay text
@@ -24,7 +23,6 @@ fn main() {
     };
 
     let fonts = register_fonts();
-
 
     eframe::run_native(
         "Bingo",
@@ -51,7 +49,7 @@ fn register_fonts() -> FontDefinitions {
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
         .push("ggsans_bold".to_string());
-    
+
     fonts.font_data.insert(
         "ggsans_bolditalic".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_bolditalic.ttf")),
@@ -61,8 +59,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_bolditalic".to_string());
-    
+        .push("ggsans_bolditalic".to_string());
+
     fonts.font_data.insert(
         "ggsans_extrabold".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_extrabold.ttf")),
@@ -72,8 +70,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_extrabold".to_string());
-    
+        .push("ggsans_extrabold".to_string());
+
     fonts.font_data.insert(
         "ggsans_extrabolditalic".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_extrabolditalic.ttf")),
@@ -83,8 +81,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_extrabolditalic".to_string());
-    
+        .push("ggsans_extrabolditalic".to_string());
+
     fonts.font_data.insert(
         "ggsans_medium".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_medium.ttf")),
@@ -94,8 +92,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_medium".to_string());
-    
+        .push("ggsans_medium".to_string());
+
     fonts.font_data.insert(
         "ggsans_mediumitalic".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_mediumitalic.ttf")),
@@ -105,8 +103,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_mediumitalic".to_string());
-    
+        .push("ggsans_mediumitalic".to_string());
+
     fonts.font_data.insert(
         "ggsans_normal".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_normal.ttf")),
@@ -116,8 +114,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push(  "ggsans_normal".to_string());
-    
+        .push("ggsans_normal".to_string());
+
     fonts.font_data.insert(
         "ggsans_normalitalic".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_normalitalic.ttf")),
@@ -127,8 +125,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_normalitalic".to_string());
-    
+        .push("ggsans_normalitalic".to_string());
+
     fonts.font_data.insert(
         "ggsans_semibold".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_semibold.ttf")),
@@ -138,8 +136,8 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .insert(0,  "ggsans_semibold".to_string());
-   
+        .insert(0, "ggsans_semibold".to_string());
+
     fonts.font_data.insert(
         "ggsans_semibolditalic".to_owned(),
         eframe::egui::FontData::from_static(include_bytes!("../fonts/ggsans_semibolditalic.ttf")),
@@ -149,7 +147,7 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "ggsans_semibolditalic".to_string());
+        .push("ggsans_semibolditalic".to_string());
 
     fonts.font_data.insert(
         "seguihis".to_owned(),
@@ -160,7 +158,7 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "seguihis".to_string());
+        .push("seguihis".to_string());
 
     fonts.font_data.insert(
         "seguisym".to_owned(),
@@ -171,10 +169,9 @@ fn register_fonts() -> FontDefinitions {
         .families
         .get_mut(&eframe::egui::FontFamily::Proportional)
         .unwrap()
-        .push( "seguisym".to_string());
+        .push("seguisym".to_string());
 
     fonts
-    
 }
 
 fn include_icon(icon: &[u8]) -> eframe::egui::IconData {
@@ -340,7 +337,7 @@ impl eframe::App for Application {
                                         string.push('\n');
                                         string.push('\n');
                                     }
-                                    
+
                                     string.push_str("Fix the spreadsheet and save, then reload the file by pressing the Reload button, and rescore the bingo");
 
                                     let dialog = double_guesser_dialog.with_body(string);
@@ -490,7 +487,12 @@ fn key_fmt(key: &str) -> String {
 fn format_guess(guess: &str) -> String {
     let mut result = String::with_capacity(12 + 4);
 
-    for (count, ch) in guess.to_uppercase().replace(['\n' ,'/', 'A', 'B', 'C', ':', ' ', '.'], "").chars().enumerate() {
+    for (count, ch) in guess
+        .to_uppercase()
+        .replace(['\n', '/', 'A', 'B', 'C', ':', ' ', '.'], "")
+        .chars()
+        .enumerate()
+    {
         if count > 0 && count % 4 == 0 {
             result.push(' ');
         }
