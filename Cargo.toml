@@ -12,9 +12,12 @@ egui_extras = "0.27.2"
 egui-modal = "0.3.6"
 rfd = "0.14.1"
 image = "0.25.1"
-umya-spreadsheet = "1.2.6"
+umya-spreadsheet = "1.2.7"
 headless_chrome = "1.0.10"
 tempfile = "3.10.1"
+
+[patch.crates-io]
+umya-spreadsheet = { git = "https://github.com/MathNya/umya-spreadsheet", rev = "20cc655d9751b20132973c65c937b578f63c4699"}
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
