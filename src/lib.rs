@@ -216,6 +216,7 @@ impl Key {
         Ok(Self(result))
     }
 
+    #[allow(dead_code)]
     fn iter(&self) -> std::slice::Iter<'_, Square> {
         <&Self as IntoIterator>::into_iter(self)
     }
