@@ -25,14 +25,14 @@ pub fn read<P: AsRef<Path>>(path: P) -> Vec<(u32, String, String, String)> {
 
         let color = if hex.len() == 6 {
             if hex == "000000" {
-                "#f2f3f5".to_string()
+                String::from("#f2f3f5")
             } else {
                 format!("#{hex}")
             }
         } else if let Some(hex) = hex.get(2..) {
             format!("#{hex}")
         } else {
-            panic!("failed to truncate: `{hex}` for `{username}`");
+            String::from("#f2f3f5")
         };
 
         let guess = worksheet.get_value((2, row));
