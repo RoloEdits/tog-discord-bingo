@@ -30,7 +30,7 @@ fn main() {
         Box::new(|cc| {
             cc.egui_ctx.set_fonts(fonts);
             cc.egui_ctx.set_pixels_per_point(2.0);
-            Box::<Application>::default()
+            Ok(Box::<Application>::default())
         }),
     )
     .unwrap();
