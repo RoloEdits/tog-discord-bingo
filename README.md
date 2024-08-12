@@ -22,6 +22,6 @@ Upon entering the answer and pressing the score button, you will see a view of t
 
 ![image](https://github.com/user-attachments/assets/14029d2a-246f-479f-98d0-5f5f86e8850f)
 
-Clicking `Save` will output a `png` file of the result in a tabled manner(this can take a few seconds):
+Clicking `Save` will output a `png` file of the result in a tabled manner(this can take a few seconds) in the same directory as the `xlsx` file with the same name:
 
 ![218](https://github.com/user-attachments/assets/05300731-a249-42dc-9177-9d999359fb57)
