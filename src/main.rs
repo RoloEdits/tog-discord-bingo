@@ -1,7 +1,7 @@
 // NOTE: Hide console in Windows when using release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bingo::{Bingo, Key, Player};
+use bingo::{Bingo, Key};
 use eframe::egui::{Color32, FontDefinitions};
 use egui_extras::{Column, TableBuilder};
 use egui_modal::Modal;
@@ -195,9 +195,17 @@ fn include_icon(icon: &[u8]) -> eframe::egui::IconData {
 struct Application {
     path: Option<PathBuf>,
     key: String,
-    bingo: Bingo,
+    bingo: Option<Bingo>,
     scored: bool,
+    radio: Radio,
     contents: Vec<(u32, String, String, String)>,
+}
+
+#[derive(PartialEq, Eq, Default)]
+enum Radio {
+    #[default]
+    Default,
+    GreatWar,
 }
 
 impl eframe::App for Application {
@@ -205,11 +213,6 @@ impl eframe::App for Application {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         let mut invalid_key_modal = Modal::new(ctx, "key_modal");
         invalid_key_modal.show_dialog();
-
-        let invalid_key_dialog = invalid_key_modal
-            .dialog()
-            .with_title("Invalid Key")
-            .with_body("Provided Key was invalid: must only contain Y or N");
 
         let mut invalid_filetype_modal = Modal::new(ctx, "filetype_modal");
         invalid_filetype_modal.show_dialog();
@@ -243,6 +246,7 @@ impl eframe::App for Application {
                     }
                 }
             } else {
+                
                 ui.horizontal(|ui| {
                     let key_label = ui.label("Key: ");
 
@@ -251,111 +255,62 @@ impl eframe::App for Application {
 
                     self.key = key_fmt(&self.key);
 
-                    ui.add_enabled_ui(
-                        self.key
-                            .chars()
-                            .filter(|char| !char.is_whitespace())
-                            .count()
-                            == 12,
-                        |ui| {
-                            let hover_text = |ui: &mut eframe::egui::Ui| {
-                                ui.label("Key must be for all 12 squares and only contain Y or N");
-                            };
+                    if ui.button("Score").clicked() {
+                        let path = self.path.as_ref().unwrap();
 
-                            if ui
-                                .button("Score")
-                                .on_disabled_hover_ui(hover_text)
-                                .clicked()
-                            {
-                                self.bingo.clear_players();
+                        let bingo = match self.radio {
+                            Radio::Default => Bingo::default(path),
+                            Radio::GreatWar => Bingo::great_war(path)
+                        };
 
-                                let mut double_guessers = Vec::new();
+                        if let Err(err) = bingo {
+                            match err {
+                                bingo::error::Error::DoubleGuesser { row } => {
+                                    let mut body = String::new();
+                                    
+                                    body.push_str(&row.to_string());
+                                    body.push('\n');
+                                    body.push('\n');
+                                    body.push_str("Fix the spreadsheet and save, then reload the file by pressing the Reload button, and rescore the bingo");
 
-                                let mut invalid_guessers = Vec::new();
-
-                                for (row, name, color, guess) in &self.contents {
-                                    // NOTE: When a cell is entered, but then deleted, it can leave behind a residual
-                                    // empty string.
-
-                                    if name.is_empty() {
-                                        continue;
-                                    }
-
-                                    let player = Player::new(
-                                        *row,
-                                        name.clone(),
-                                        color.clone(),
-                                        guess.clone(),
-                                    );
-
-                                    if let Ok(player) = player {
-                                        if let Err(err) = self.bingo.add_player(player) {
-                                            match err {
-                                                bingo::BingoError::DoubleGuesser {
-                                                    name,
-                                                    row,
-                                                    guess,
-                                                } => {
-                                                    double_guessers.push((row, name, guess));
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        invalid_guessers.push((row, name, guess));
-                                    }
-                                }
-
-                                if !invalid_guessers.is_empty() {
-                                    let mut string = String::new();
-
-                                    for (row, name, guess) in invalid_guessers {
-                                        string.push_str(&row.to_string());
-                                        string.push_str(" | ");
-                                        string.push_str(name);
-                                        string.push_str(" | ");
-                                        string.push_str(guess);
-                                        string.push('\n');
-                                        string.push('\n');
-                                    }
-
-                                    string.push_str("Fix the spreadsheet and save, then reload the file by pressing the Reload button, and rescore the bingo");
-
-                                    let dialog = invalid_guessers_dialog.with_body(string);
+                                    let dialog = invalid_guessers_dialog.with_body(body);
 
                                     dialog.open();
-                                }
+                                },
+                                bingo::error::Error::NotEnoughValidSquares { name, row, amount, needed } => {
+                                    let mut body = String::new();
 
-                                if !double_guessers.is_empty() {
-                                    let mut string = String::new();
+                                    body.push_str(&row.to_string());
+                                    body.push_str(" | ");
+                                    body.push_str(&name);
+                                    body.push_str(" | ");
+                                    body.push('\n');
+                                    body.push('\n');
 
-                                    for (row, name, guess) in double_guessers {
-                                        string.push_str(&row.to_string());
-                                        string.push_str(" | ");
-                                        string.push_str(&name);
-                                        string.push_str(" | ");
-                                        string.push_str(&guess);
-                                        string.push('\n');
-                                        string.push('\n');
-                                    }
+                                    let message = format!("Only guessed for `{amount}` squares, needs `{needed}` squares");
+                                    body.push_str(&message);
+                                    body.push('\n');
+                                    
+                                    body.push_str("Fix the spreadsheet and save, then reload the file by pressing the Reload button, and rescore the bingo");
 
-                                    string.push_str("Fix the spreadsheet and save, then reload the file by pressing the Reload button, and rescore the bingo");
-
-                                    let dialog = double_guesser_dialog.with_body(string);
+                                    let dialog = double_guesser_dialog.with_body(body);
 
                                     dialog.open();
-                                }
-
-                                if let Ok(key) = Key::new(&self.key) {
-                                    self.bingo.score(&key);
-                                    self.scored = true;
-                                } else {
-                                    invalid_key_dialog.open();
-                                }
+                                },
                             }
-                        },
-                    );
+                        } else if let Ok( mut bingo) = bingo {
+                            bingo.score(&Key::parse(&self.key));
+                            self.bingo = Some(bingo);
+                            self.scored = true;
+                        }
+                    }
                 });
-
+                
+                ui.horizontal(|ui| {
+                    ui.radio_value(&mut self.radio, Radio::Default, "Default");
+                    ui.radio_value(&mut self.radio, Radio::GreatWar, "Great War");
+                });
+                
                 if !self.scored {
                     ui.separator();
 
@@ -365,7 +320,7 @@ impl eframe::App for Application {
                             self.scored = false;
                         }
                     }
-
+                    
                     ui.separator();
                 }
 
@@ -376,18 +331,15 @@ impl eframe::App for Application {
 
                     ui.horizontal(|ui| {
                         if ui.button("Reload File").clicked() {
-                            if let Some(path) = &self.path {
-                                self.contents = spreadsheet::read(path);
+                                self.contents = spreadsheet::read(self.path.as_ref().unwrap());
                                 self.scored = false;
-                            }
                         }
 
                         if ui.button("Save").clicked() {
-                            self.bingo.save_html(
+                            self.bingo.as_ref().unwrap().save_html(
                                 self.path
                                     .as_ref()
-                                    .expect("path should have been given at this point")
-                                    .clone(),
+                                    .expect("path should have been given at this point"),
                             );
                         }
                     });
@@ -414,10 +366,15 @@ impl eframe::App for Application {
                             });
                         })
                         .body(|mut body| {
-                            for player in &self.bingo.players {
+                            for player in self.bingo.as_ref().unwrap().players() {
                                 body.row(18.0, |mut row| {
                                     row.col(|ui| {
-                                        ui.colored_label(Color32::from_hex(&player.color).expect("colors from spreadsheet should always be hex"),player.name.clone());
+                                        ui.colored_label(
+                                            Color32::from_hex(&player.color).expect(
+                                                "colors from spreadsheet should always be hex",
+                                            ),
+                                            player.name.clone(),
+                                        );
                                     });
                                     row.col(|ui| {
                                         ui.label(player.score.to_string());
@@ -436,6 +393,7 @@ impl eframe::App for Application {
                         .column(Column::auto())
                         .min_scrolled_height(0.0)
                         .max_scroll_height(available_height);
+                    
                     table
                         .header(20.0, |mut header| {
                             header.col(|ui| {
@@ -459,10 +417,15 @@ impl eframe::App for Application {
                                         ui.label(rw.to_string());
                                     });
                                     row.col(|ui| {
-                                        ui.colored_label(Color32::from_hex(color).expect("colors from spreadsheet should always be hex"),name);
+                                        ui.colored_label(
+                                            Color32::from_hex(color).expect(
+                                                "colors from spreadsheet should always be hex",
+                                            ),
+                                            name,
+                                        );
                                     });
                                     row.col(|ui| {
-                                        ui.label(format_guess(guess));
+                                        ui.label(guess);
                                     });
                                 });
                             }
@@ -482,22 +445,4 @@ impl eframe::App for Application {
 
 fn key_fmt(key: &str) -> String {
     key.to_uppercase().replace('\n', " ")
-}
-
-fn format_guess(guess: &str) -> String {
-    let mut result = String::with_capacity(12 + 4);
-
-    for (count, ch) in guess
-        .to_uppercase()
-        .replace(['\n', '/', 'A', 'B', 'C', ':', ' ', '.'], "")
-        .chars()
-        .enumerate()
-    {
-        if count > 0 && count % 4 == 0 {
-            result.push(' ');
-        }
-        result.push(ch);
-    }
-
-    result
 }
