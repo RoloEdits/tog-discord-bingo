@@ -1,7 +1,7 @@
+use eframe::egui::Color32;
 use std::path::Path;
 
-use eframe::egui::Color32;
-
+#[derive(Debug)]
 pub struct Row {
     pub(crate) num: u32,
     pub(crate) name: Name,
@@ -9,6 +9,7 @@ pub struct Row {
     pub(crate) starting_score: i32,
 }
 
+#[derive(Debug)]
 pub struct Name {
     text: String,
     color: Color32,
@@ -53,7 +54,7 @@ impl Row {
 pub fn read<P: AsRef<Path>>(path: P) -> Vec<Row> {
     let mut contents = Vec::new();
 
-    let workbook = umya_spreadsheet::reader::xlsx::read(path).unwrap();
+    let workbook = umya_spreadsheet::reader::xlsx::read(path).expect("failed to read xlsx file");
 
     let worksheet = workbook
         .get_sheet_by_name("Sheet1")
@@ -64,7 +65,11 @@ pub fn read<P: AsRef<Path>>(path: P) -> Vec<Row> {
             break;
         };
 
-        let text = cell.get_cell_value().get_value().to_string();
+        let text = cell.get_cell_value().get_value();
+
+        if text.is_empty() {
+            continue;
+        }
 
         let hex = cell
             .get_style()
@@ -93,7 +98,7 @@ pub fn read<P: AsRef<Path>>(path: P) -> Vec<Row> {
 
         contents.push(Row {
             num: row,
-            name: Name::new(text, color),
+            name: Name::new(text.to_string(), color),
             guess,
             starting_score: score,
         });

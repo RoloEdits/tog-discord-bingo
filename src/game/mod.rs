@@ -64,14 +64,14 @@ pub trait Game {
         for row in rows {
             let Ok(guess) = Guess::from_str(row.guess());
 
-            if guess.len() != Self::SQUARES {
-                return Err(Error::NotEnoughValidSquares {
-                    name: row.name().text().to_string(),
-                    row: row.num(),
-                    amount: guess.len(),
-                    needed: Self::SQUARES,
-                });
-            }
+            // if guess.len() != Self::SQUARES {
+            //     return Err(Error::NotEnoughValidSquares {
+            //         name: row.name().text().to_string(),
+            //         row: row.num(),
+            //         amount: guess.len(),
+            //         needed: Self::SQUARES,
+            //     });
+            // }
 
             let player = Player {
                 name: row.name().text().to_string(),
@@ -86,9 +86,9 @@ pub trait Game {
             // to inform the user everyone who offended.
             //
             // Another option could be to just silently replace with new guess, or even exclude them altogether.
-            if players.contains(&player) {
-                return Err(Error::DoubleGuesser { row: row.num() });
-            }
+            // if players.contains(&player) {
+            //     return Err(Error::DoubleGuesser { row: row.num(), name: row.name().text().to_string() });
+            // }
 
             players.push(player);
         }

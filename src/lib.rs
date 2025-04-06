@@ -2,7 +2,7 @@ use error::Error;
 use std::{convert::Infallible, fmt::Display, hash::Hash, path::Path, str::FromStr};
 
 pub mod error;
-mod game;
+pub mod game;
 pub mod spreadsheet;
 
 use game::{Game, great_war::GreatWar, normal::Normal};
