@@ -1,14 +1,14 @@
 // NOTE: Hide console in Windows when using release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bingo::{Bingo, Key};
+use bingo::{Bingo, Key, spreadsheet::Row};
 use eframe::egui::{Color32, FontDefinitions};
 use egui_extras::{Column, TableBuilder};
 use egui_modal::Modal;
 use std::{ffi::OsStr, path::PathBuf};
-mod spreadsheet;
-
+use std::str::FromStr;
 use mimalloc::MiMalloc;
+
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -36,6 +36,7 @@ fn main() {
     .unwrap();
 }
 
+#[allow(clippy::too_many_lines)]
 fn register_fonts() -> FontDefinitions {
     let mut fonts = FontDefinitions::default();
 
@@ -197,12 +198,12 @@ struct Application {
     key: String,
     bingo: Option<Bingo>,
     scored: bool,
-    radio: Radio,
-    contents: Vec<(u32, String, String, String)>,
+    rules: Rules,
+    rows: Vec<Row>,
 }
 
 #[derive(PartialEq, Eq, Default)]
-enum Radio {
+enum Rules {
     #[default]
     Default,
     GreatWar,
@@ -233,20 +234,19 @@ impl eframe::App for Application {
         let invalid_guessers_dialog = invalid_guess_modal.dialog().with_title("Invalid Guess");
 
         eframe::egui::CentralPanel::default().show(ctx, |ui| {
-            if self.contents.is_empty() {
+            if self.rows.is_empty() {
                 ui.vertical_centered(|ui| {
                     ui.centered_and_justified(|ui| ui.label("Drag-and-drop file onto the window!"))
                 });
                 if let Some(path) = &self.path {
                     if path.extension() == Some(OsStr::new("xlsx")) {
-                        self.contents = spreadsheet::read(path);
+                        self.rows = bingo::spreadsheet::read(path);
                     } else {
                         invalid_filetype_dialog.open();
                         self.path = None;
                     }
                 }
             } else {
-                
                 ui.horizontal(|ui| {
                     let key_label = ui.label("Key: ");
 
@@ -256,11 +256,10 @@ impl eframe::App for Application {
                     self.key = key_fmt(&self.key);
 
                     if ui.button("Score").clicked() {
-                        let path = self.path.as_ref().unwrap();
-
-                        let bingo = match self.radio {
-                            Radio::Default => Bingo::default(path),
-                            Radio::GreatWar => Bingo::great_war(path)
+                        let rows = self.rows.as_slice();
+                        let bingo = match self.rules {
+                            Rules::Default => Bingo::normal(rows),
+                            Rules::GreatWar => Bingo::great_war(rows)
                         };
 
                         if let Err(err) = bingo {
@@ -299,7 +298,8 @@ impl eframe::App for Application {
                                 },
                             }
                         } else if let Ok( mut bingo) = bingo {
-                            bingo.score(&Key::parse(&self.key));
+                            let key = Key::from_str(&self.key).expect("should be infallible");
+                            bingo.play(&key);
                             self.bingo = Some(bingo);
                             self.scored = true;
                         }
@@ -307,8 +307,8 @@ impl eframe::App for Application {
                 });
                 
                 ui.horizontal(|ui| {
-                    ui.radio_value(&mut self.radio, Radio::Default, "Default");
-                    ui.radio_value(&mut self.radio, Radio::GreatWar, "Great War");
+                    ui.radio_value(&mut self.rules, Rules::Default, "Default");
+                    ui.radio_value(&mut self.rules, Rules::GreatWar, "Great War");
                 });
                 
                 if !self.scored {
@@ -316,7 +316,7 @@ impl eframe::App for Application {
 
                     if ui.button("Reload File").clicked() {
                         if let Some(path) = &self.path {
-                            self.contents = spreadsheet::read(path);
+                            self.rows = bingo::spreadsheet::read(path);
                             self.scored = false;
                         }
                     }
@@ -331,7 +331,7 @@ impl eframe::App for Application {
 
                     ui.horizontal(|ui| {
                         if ui.button("Reload File").clicked() {
-                                self.contents = spreadsheet::read(self.path.as_ref().unwrap());
+                                self.rows = bingo::spreadsheet::read(self.path.as_ref().unwrap());
                                 self.scored = false;
                         }
 
@@ -407,25 +407,23 @@ impl eframe::App for Application {
                             });
                         })
                         .body(|mut body| {
-                            for (rw, name, color, guess) in &self.contents {
-                                if name.is_empty() {
+                            for row in &self.rows {
+                                if row.name().is_empty() {
                                     continue;
                                 }
 
-                                body.row(18.0, |mut row| {
-                                    row.col(|ui| {
-                                        ui.label(rw.to_string());
+                                body.row(18.0, |mut table_row| {
+                                    table_row.col(|ui| {
+                                        ui.label(row.num().to_string());
                                     });
-                                    row.col(|ui| {
+                                    table_row.col(|ui| {
                                         ui.colored_label(
-                                            Color32::from_hex(color).expect(
-                                                "colors from spreadsheet should always be hex",
-                                            ),
-                                            name,
+                                            row.name().color(),
+                                        row.name().text(),
                                         );
                                     });
-                                    row.col(|ui| {
-                                        ui.label(guess);
+                                    table_row.col(|ui| {
+                                        ui.label(row.guess());
                                     });
                                 });
                             }
