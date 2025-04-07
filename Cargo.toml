@@ -5,7 +5,7 @@ edition = "2024"
 repository = "https://github.com/RoloEdits/tog-discord-bingo"
 
 [dependencies]
-mimalloc = "0.1.44"
+mimalloc = "0.1.45"
 eframe = "0.31"
 egui_extras = "0.31"
 image = "0.25"
