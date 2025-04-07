@@ -93,10 +93,6 @@ impl Eq for Player {}
 pub struct Guess(Vec<Square>);
 
 impl Guess {
-    fn len(&self) -> usize {
-        self.0.len()
-    }
-
     fn iter(&self) -> std::slice::Iter<'_, Square> {
         self.0.as_slice().iter()
     }
