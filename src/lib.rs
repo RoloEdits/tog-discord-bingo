@@ -1,43 +1,45 @@
 use error::Error;
-use std::{fmt::Display, hash::Hash, path::Path};
+use std::{convert::Infallible, fmt::Display, hash::Hash, path::Path, str::FromStr};
 
 pub mod error;
+pub mod game;
+pub mod spreadsheet;
 
-mod algo;
-use algo::{default::Default, great_war::GreatWar, Algorithm};
+use game::{Game, great_war::GreatWar, normal::Normal};
+use spreadsheet::Row;
 
 #[derive(Debug)]
 pub enum Bingo {
-    Default(Default),
+    Normal(Normal),
     GreatWar(GreatWar),
 }
 
 impl Bingo {
-    pub fn default(path: &Path) -> Result<Self, Error> {
-        Ok(Self::Default(Default::read(path)?))
+    pub fn normal(rows: &[Row]) -> Result<Self, Error> {
+        Ok(Self::Normal(Normal::from_rows(rows)?))
     }
 
-    pub fn great_war(path: &Path) -> Result<Self, Error> {
-        Ok(Self::GreatWar(GreatWar::read(path)?))
+    pub fn great_war(rows: &[Row]) -> Result<Self, Error> {
+        Ok(Self::GreatWar(GreatWar::from_rows(rows)?))
     }
 
     pub fn players(&self) -> &[Player] {
         match self {
-            Self::Default(default) => default.players(),
+            Self::Normal(normal) => normal.players(),
             Self::GreatWar(great_war) => great_war.players(),
         }
     }
 
-    pub fn score(&mut self, key: &Key) -> &[Player] {
+    pub fn play(&mut self, key: &Key) {
         match self {
-            Bingo::Default(default) => default.score(key),
-            Self::GreatWar(great_war) => great_war.score(key),
+            Self::Normal(normal) => normal.play(key),
+            Self::GreatWar(great_war) => great_war.play(key),
         }
     }
 
     pub fn save_html(&self, path: &Path) {
         match self {
-            Bingo::Default(default) => default.save_html(path),
+            Self::Normal(normal) => normal.save_html(path),
             Self::GreatWar(great_war) => great_war.save_html(path),
         }
     }
@@ -46,26 +48,19 @@ impl Bingo {
 #[derive(Debug)]
 pub struct Key(Vec<Square>);
 
-impl Key {
-    pub fn parse(key: &str) -> Self {
+impl FromStr for Key {
+    type Err = Infallible;
+
+    fn from_str(key: &str) -> Result<Self, Self::Err> {
         let mut result: Vec<Square> = Vec::with_capacity(12);
 
         for square in key.chars() {
-            if matches!(square, 'Y' | 'y' | 'N' | 'n' | 'P' | 'p') {
+            if matches!(square, 'Y' | 'y' | 'N' | 'n') {
                 result.push(Square::from_char(square));
             }
         }
 
-        Self(result)
-    }
-
-    fn as_squares(&self) -> &[Square] {
-        &self.0
-    }
-
-    #[allow(dead_code)]
-    fn iter(&self) -> std::slice::Iter<'_, Square> {
-        <&Self as IntoIterator>::into_iter(self)
+        Ok(Self(result))
     }
 }
 
@@ -74,13 +69,12 @@ impl<'a> IntoIterator for &'a Key {
     type IntoIter = std::slice::Iter<'a, Square>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
+        self.0.as_slice().iter()
     }
 }
 
 #[derive(PartialOrd, Ord, Debug, Clone)]
 pub struct Player {
-    pub row: u32,
     pub name: String,
     pub color: String,
     pub guess: Guess,
@@ -99,27 +93,8 @@ impl Eq for Player {}
 pub struct Guess(Vec<Square>);
 
 impl Guess {
-    fn parse(s: &str) -> Self {
-        let mut guess: Vec<Square> = Vec::new();
-
-        for square in s.chars() {
-            if matches!(square, 'Y' | 'y' | 'N' | 'n' | 'P' | 'p') {
-                guess.push(Square::from_char(square));
-            }
-        }
-        Self(guess)
-    }
-
-    fn as_squares(&self) -> &[Square] {
-        &self.0
-    }
-
-    fn len(&self) -> usize {
-        self.0.len()
-    }
-
     fn iter(&self) -> std::slice::Iter<'_, Square> {
-        <&Self as IntoIterator>::into_iter(self)
+        self.0.as_slice().iter()
     }
 }
 
@@ -130,6 +105,25 @@ impl Display for Guess {
         }
 
         Ok(())
+    }
+}
+
+impl FromStr for Guess {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut guess: Vec<Square> = Vec::with_capacity(s.len());
+
+        for square in s.chars() {
+            if square.is_whitespace() {
+                continue;
+            }
+
+            if matches!(square, 'Y' | 'y' | 'N' | 'n' | 'P' | 'p') {
+                guess.push(Square::from_char(square));
+            }
+        }
+        Ok(Self(guess))
     }
 }
 
