@@ -1,6 +1,9 @@
 // NOTE: Hide console in Windows when using release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use bingo::game::Game;
+use bingo::game::great_war::GreatWar;
+use bingo::game::normal::Normal;
 use bingo::{Bingo, Key, spreadsheet::Row};
 use eframe::egui::{Color32, Id, Modal};
 use egui_extras::{Column, TableBuilder};
@@ -99,9 +102,16 @@ impl eframe::App for Application {
                     ui.text_edit_singleline(&mut self.key)
                         .labelled_by(key_label.id);
 
-                    self.key = key_fmt(&self.key);
+                    // Formatting
+                    self.key = self.key.to_uppercase().replace('\n', " ");
 
-                    if ui.button("Score").clicked() {
+                    let len = self.key.chars().filter(|ch| !ch.is_whitespace()).count();
+                    let enough = match self.rules {
+                        Rules::Normal => Normal::SQUARES == len,
+                        Rules::GreatWar => GreatWar::SQUARES == len,
+                    };
+
+                    if ui.add_enabled(enough, eframe::egui::Button::new("Score")).clicked() {
                         let rows = self.rows.as_slice();
                         let bingo = match self.rules {
                             Rules::Normal => Bingo::normal(rows),
@@ -269,8 +279,4 @@ impl eframe::App for Application {
             }
         });
     }
-}
-
-fn key_fmt(key: &str) -> String {
-    key.to_uppercase().replace('\n', " ")
 }
