@@ -13,6 +13,12 @@ umya-spreadsheet = "2.2"
 headless_chrome = "1"
 tempfile = "3.19.0"
 
+[profile.release]
+opt-level = "z"
+strip = "symbols"
+lto = true
+codegen-units = 1
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
