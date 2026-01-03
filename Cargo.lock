@@ -2041,6 +2041,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "imagesize"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
+
+[[package]]
 name = "imgref"
 version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4040,9 +4046,9 @@ dependencies = [
 
 [[package]]
 name = "umya-spreadsheet"
-version = "2.2.3"
+version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17ec15f1f191ba42ba0ed0f788999eec910c201cbbd4ae5de7cf0eb0a94b3d1a"
+checksum = "408c7e039c96ec1d517a1111ade7fadab889f32c096dac691a1e3b8018c3e39a"
 dependencies = [
  "aes",
  "ahash",
@@ -4056,7 +4062,7 @@ dependencies = [
  "getrandom 0.2.15",
  "hmac",
  "html_parser",
- "image",
+ "imagesize",
  "lazy_static",
  "md-5",
  "quick-xml 0.37.4",

@@ -9,7 +9,7 @@ mimalloc = "0.1.48"
 eframe = "0.31"
 egui_extras = "0.31"
 image = "0.25"
-umya-spreadsheet = "2.2"
+umya-spreadsheet = "2.3"
 headless_chrome = "1"
 tempfile = "3.19.0"
 
