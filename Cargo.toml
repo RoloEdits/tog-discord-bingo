@@ -6,8 +6,8 @@ repository = "https://github.com/RoloEdits/tog-discord-bingo"
 
 [dependencies]
 mimalloc = "0.1.48"
-eframe = "0.31"
-egui_extras = "0.31"
+eframe = "0.33"
+egui_extras = "0.33"
 image = "0.25"
 umya-spreadsheet = "2.3"
 headless_chrome = "1"
