@@ -24,7 +24,7 @@ fn main() {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_inner_size([815.0, 850.0]) // wide enough for the drag-drop overlay text
             .with_drag_and_drop(true)
-            .with_icon(include_icon(include_bytes!("../icon.png"))),
+            .with_icon(include_icon(include_bytes!("../assets/icon.png"))),
         ..Default::default()
     };
 
