@@ -5,7 +5,8 @@ use bingo::game::Game;
 use bingo::game::great_war::GreatWar;
 use bingo::game::normal::Normal;
 use bingo::{Bingo, Key, spreadsheet::Row};
-use eframe::egui::{Color32, Id, Modal};
+use eframe::App;
+use eframe::egui::{Align, Color32, Context, Id, Layout, Modal, Ui};
 use egui_extras::{Column, TableBuilder};
 use mimalloc::MiMalloc;
 use std::str::FromStr;
@@ -71,30 +72,12 @@ enum Rules {
     GreatWar,
 }
 
-impl eframe::App for Application {
+impl App for Application {
     #[allow(clippy::too_many_lines)]
-    fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         eframe::egui::CentralPanel::default().show(ctx, |ui| {
             if self.rows.is_empty() {
-                ui.vertical_centered(|ui| {
-                    ui.centered_and_justified(|ui| ui.label("Drag-and-drop file onto the window!"))
-                });
-                if let Some(path) = &self.path {
-                    if path.extension() == Some(OsStr::new("xlsx")) {
-                        self.rows = bingo::spreadsheet::read(path);
-                    } else {
-                        let modal = Modal::new(Id::new("IF")).show(ctx, |ui| {
-                            ui.set_width(200.0);
-                            ui.heading("Invalid Filetype:");
-                            ui.separator();
-                            ui.label("Must be xslx");
-                        });
-
-                        if modal.should_close() {
-                            self.path = None;
-                        }
-                    }
-                }
+                self.file_dialog(ctx, ui);
             } else {
                 ui.horizontal(|ui| {
                     let key_label = ui.label("Key: ");
@@ -162,12 +145,11 @@ impl eframe::App for Application {
                 if !self.scored {
                     ui.separator();
 
-                    if ui.button("Reload File").clicked() {
-                        if let Some(path) = &self.path {
+                    if ui.button("Reload File").clicked()
+                        && let Some(path) = &self.path {
                             self.rows = bingo::spreadsheet::read(path);
                             self.scored = false;
                         }
-                    }
 
                     ui.separator();
                 }
@@ -195,8 +177,8 @@ impl eframe::App for Application {
 
                     let table = TableBuilder::new(ui)
                         .striped(true)
-                        .cell_layout(eframe::egui::Layout::left_to_right(
-                            eframe::egui::Align::Center,
+                        .cell_layout(Layout::left_to_right(
+                            Align::Center,
                         ))
                         .column(Column::exact(322.0))
                         .column(Column::exact(36.0))
@@ -232,8 +214,8 @@ impl eframe::App for Application {
                 } else {
                     let table = TableBuilder::new(ui)
                         .striped(true)
-                        .cell_layout(eframe::egui::Layout::left_to_right(
-                            eframe::egui::Align::Center,
+                        .cell_layout(Layout::left_to_right(
+                            Align::Center,
                         ))
                         .column(Column::auto())
                         .column(Column::initial(200.0))
@@ -271,12 +253,38 @@ impl eframe::App for Application {
                 }
             }
         });
+    }
+}
 
-        // Collect dropped files:
-        ctx.input(|i| {
-            if !i.raw.dropped_files.is_empty() {
-                self.path.clone_from(&i.raw.dropped_files[0].path);
-            }
+impl Application {
+    fn file_dialog(&mut self, ctx: &Context, ui: &mut Ui) {
+        ui.vertical_centered(|ui| {
+            ui.centered_and_justified(|ui| {
+                if ui.label("Click to open file browser!").clicked()
+                    && let Some(path) = rfd::FileDialog::new()
+                        .add_filter("Excel Spreadsheet", &["xlsx"])
+                        .pick_file()
+                {
+                    self.path = Some(path);
+                }
+            })
         });
+
+        if let Some(path) = &self.path {
+            if path.extension() == Some(OsStr::new("xlsx")) {
+                self.rows = bingo::spreadsheet::read(path);
+            } else {
+                let modal = Modal::new(Id::new("IF")).show(ctx, |ui| {
+                    ui.set_width(200.0);
+                    ui.heading("Invalid Filetype:");
+                    ui.separator();
+                    ui.label("Must be xslx");
+                });
+
+                if modal.should_close() {
+                    self.path = None;
+                }
+            }
+        }
     }
 }
