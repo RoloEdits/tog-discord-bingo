@@ -37,10 +37,10 @@ impl Bingo {
         }
     }
 
-    pub fn save_html(&self, path: &Path) {
+    pub fn save_png(&self, path: &Path) {
         match self {
-            Self::Normal(normal) => normal.save_html(path),
-            Self::GreatWar(great_war) => great_war.save_html(path),
+            Self::Normal(normal) => normal.save_png(path),
+            Self::GreatWar(great_war) => great_war.save_png(path),
         }
     }
 }

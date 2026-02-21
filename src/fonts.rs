@@ -141,5 +141,17 @@ pub fn load() -> FontDefinitions {
         .unwrap()
         .push("seguisym".to_string());
 
+    fonts.font_data.insert(
+        "noto-sans-sc".to_owned(),
+        eframe::egui::FontData::from_static(include_bytes!("../fonts/NotoSansSC-SemiBold.ttf"))
+            .into(),
+    );
+
+    fonts
+        .families
+        .get_mut(&eframe::egui::FontFamily::Proportional)
+        .unwrap()
+        .push("noto-sans-sc".to_string());
+
     fonts
 }
