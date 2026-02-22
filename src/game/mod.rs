@@ -151,7 +151,7 @@ pub fn svg(players: &[Player]) -> String {
 
     let mut svg = String::new();
 
-    let bg = "#36393f";
+    let bg = "#222226";
 
     write!(
         svg,
