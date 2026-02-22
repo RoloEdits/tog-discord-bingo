@@ -1,8 +1,9 @@
+use std::fmt::Write;
+use std::path::Path;
 use std::str::FromStr;
-use std::time::Duration;
-use std::{fmt::Write as _, fs::File, io::Write as _, path::Path};
 
-use headless_chrome::{Browser, protocol::cdp::Page::CaptureScreenshotFormatOption, types::Bounds};
+use resvg::tiny_skia::Pixmap;
+use resvg::usvg::{Options, Tree};
 
 use crate::error::Error;
 use crate::spreadsheet::Row;
@@ -96,106 +97,94 @@ pub trait Game {
         Ok(players)
     }
 
-    fn save_html(&self, path: &Path) {
-        let players = self.players().to_vec();
-        let path = path.to_path_buf();
+    fn save_png(&self, path: &Path) {
+        let path = path.with_extension("png");
+        let svg = svg(self.players());
 
         std::thread::spawn(move || {
-            let mut html = String::new();
+            let mut opt = Options::default();
 
-            html.push_str(
-                r#"<!DOCTYPE html>
-            <html>
+            opt.fontdb_mut()
+                .load_font_data(include_bytes!("../../fonts/ggsans_bold.ttf").to_vec());
+            opt.fontdb_mut()
+                .load_font_data(include_bytes!("../../fonts/seguihis.ttf").to_vec());
+            opt.fontdb_mut()
+                .load_font_data(include_bytes!("../../fonts/seguisym.ttf").to_vec());
+            opt.fontdb_mut()
+                .load_font_data(include_bytes!("../../fonts/NotoSansSC-SemiBold.ttf").to_vec());
 
-            <head>
-                <meta charset="UTF-8" />
-                <title>title</title>
-                <script src="https://cdn.tailwindcss.com"></script>
-            </head>
+            let tree = Tree::from_str(&svg, &opt).expect("Invalid SVG");
 
-            <body class="max-w-md">
-                <div class="relative">
-                    <table class="w-full text-4xl text-left text-zinc-50">
-                        <thead class="text-xl uppercase bg-zinc-700 text-zinc-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">
-                                    Name
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    Score
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-zinc-800 text-white">"#,
+            let size = tree.size();
+
+            let mut pixelmap = Pixmap::new(size.width() as u32, size.height() as u32)
+                .expect("Faild to create Pixmap");
+
+            resvg::render(
+                &tree,
+                resvg::usvg::Transform::default(),
+                &mut pixelmap.as_mut(),
             );
 
-            for player in players {
-                write!(html,"<tr class=\" border-b border-zinc-700\">
-                                                <th scope=\"row\" class=\"px-6 py-4 font-medium whitespace-nowrap\" style=\"color: {};\">", player.color ).unwrap();
-
-                html.push_str(&player.name);
-
-                html.push_str(
-                    r#"</th>
-                        <td class="px-6 py-4 text-white">"#,
-                );
-
-                html.push_str(&player.score.to_string());
-
-                html.push_str(r"</td></tr>");
-            }
-
-            html.push_str(
-                "</tbody>
-                    </table>
-                </div>
-            </body>
-            </html>",
-            );
-            let dir = tempfile::tempdir().unwrap();
-
-            let temp_path = dir
-                .path()
-                .with_file_name(path.file_name().unwrap())
-                .with_extension("html");
-
-            let mut temp = File::create(&temp_path).unwrap();
-
-            temp.write_all(html.as_bytes()).unwrap();
-
-            let browser = Browser::new(headless_chrome::LaunchOptions {
-                idle_browser_timeout: Duration::from_secs(600),
-                ..Default::default()
-            })
-            .unwrap();
-
-            let tab = browser.new_tab().unwrap();
-
-            tab.navigate_to(temp_path.as_os_str().to_str().unwrap())
-                .unwrap()
-                .wait_until_navigated()
-                .unwrap();
-
-            let element = tab.find_element("tbody").unwrap();
-
-            tab.set_bounds(Bounds::Normal {
-                left: Some(0),
-                top: Some(0),
-                // table width + right vertical scroll bar
-                width: Some(1_000.0),
-                height: Some(15_000.0),
-            })
-            .unwrap();
-
-            let bytes = element
-                .capture_screenshot(CaptureScreenshotFormatOption::Png)
-                .unwrap();
-
-            let image =
-                image::load_from_memory_with_format(&bytes, image::ImageFormat::Png).unwrap();
-
-            let cropped = image.crop_imm(0, 0, image.width() - 17, image.height());
-            cropped.save(path.with_extension("png")).unwrap();
+            pixelmap.save_png(path).expect("Failed to save PNG");
         });
     }
+}
+
+#[must_use]
+pub fn svg(players: &[Player]) -> String {
+    let row_height = 70;
+
+    let px = 20;
+    let padding = 50;
+
+    let name = players
+        .iter()
+        .map(|p| p.name.chars().count())
+        .max()
+        .unwrap_or(10);
+
+    let x = 50 + name as u32 * px + padding;
+
+    let width = x + 150;
+    let height = row_height * players.len() as u32;
+
+    let mut svg = String::new();
+
+    let bg = "#36393f";
+
+    write!(
+        svg,
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
+        <style>
+            .body-bg {{ fill: {bg}; }}
+            .body-text {{ font-family: gg sans,Noto Sans SC,Segoe UI Historic,Segoe UI Symbol; font-size: 36px; }}
+        </style>
+
+        <rect class="body-bg" width="100%" height="100%"/>
+    "#
+    )
+    .unwrap();
+
+    for (idx, player) in players.iter().enumerate() {
+        let y = idx as u32 * row_height;
+
+        write!(
+            svg,
+            r##"
+            <text class="body-text" x="{padding}" y="{}" fill="{}">{}</text>
+            <text class="body-text" x="{x}" y="{}" fill="#e6e6e8" text-anchor="end">{}</text>
+            "##,
+            y + 45,
+            player.color,
+            player.name,
+            y + 45,
+            player.score
+        )
+        .unwrap();
+    }
+
+    svg.push_str("</svg>");
+
+    svg
 }

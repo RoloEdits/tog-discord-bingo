@@ -6,10 +6,12 @@ use bingo::game::great_war::GreatWar;
 use bingo::game::normal::Normal;
 use bingo::{Bingo, Key, spreadsheet::Row};
 use eframe::App;
+use eframe::egui::mutex::RwLock;
 use eframe::egui::{Align, Color32, Context, Id, Layout, Modal, Ui};
 use egui_extras::{Column, TableBuilder};
 use mimalloc::MiMalloc;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::{ffi::OsStr, path::PathBuf};
 
 mod fonts;
@@ -57,7 +59,7 @@ fn include_icon(icon: &[u8]) -> eframe::egui::IconData {
 
 #[derive(Default)]
 struct Application {
-    path: Option<PathBuf>,
+    path: Arc<RwLock<Option<PathBuf>>>,
     key: String,
     bingo: Option<Bingo>,
     scored: bool,
@@ -146,7 +148,7 @@ impl App for Application {
                     ui.separator();
 
                     if ui.button("Reload File").clicked()
-                        && let Some(path) = &self.path {
+                        && let Some(path) = self.path.read().as_ref() {
                             self.rows = bingo::spreadsheet::read(path);
                             self.scored = false;
                         }
@@ -161,7 +163,7 @@ impl App for Application {
 
                     ui.horizontal(|ui| {
                         if ui.button("Reload File").clicked() {
-                            self.rows = bingo::spreadsheet::read(self.path.as_ref().unwrap());
+                            self.rows = bingo::spreadsheet::read(self.path.read().as_ref().unwrap());
                             self.scored = false;
                         }
 
@@ -169,7 +171,7 @@ impl App for Application {
                             self.bingo
                                 .as_ref()
                                 .unwrap()
-                                .save_html(self.path.as_ref().unwrap());
+                                .save_png(self.path.read().as_ref().unwrap());
                         }
                     });
 
@@ -260,17 +262,22 @@ impl Application {
     fn file_dialog(&mut self, ctx: &Context, ui: &mut Ui) {
         ui.vertical_centered(|ui| {
             ui.centered_and_justified(|ui| {
-                if ui.label("Click to open file browser!").clicked()
-                    && let Some(path) = rfd::FileDialog::new()
-                        .add_filter("Excel Spreadsheet", &["xlsx"])
-                        .pick_file()
-                {
-                    self.path = Some(path);
+                if ui.label("Click to open file browser!").clicked() {
+                    let path = Arc::clone(&self.path);
+
+                    std::thread::spawn(move || {
+                        if let Some(file) = rfd::FileDialog::new()
+                            .add_filter("Excel Spreadsheet", &["xlsx"])
+                            .pick_file()
+                        {
+                            *path.write() = Some(file);
+                        }
+                    });
                 }
             })
         });
 
-        if let Some(path) = &self.path {
+        if let Some(path) = self.path.read().as_ref() {
             if path.extension() == Some(OsStr::new("xlsx")) {
                 self.rows = bingo::spreadsheet::read(path);
             } else {
@@ -282,7 +289,7 @@ impl Application {
                 });
 
                 if modal.should_close() {
-                    self.path = None;
+                    *self.path.write() = None;
                 }
             }
         }
