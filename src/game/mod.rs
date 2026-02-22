@@ -105,13 +105,13 @@ pub trait Game {
             let mut opt = Options::default();
 
             opt.fontdb_mut()
-                .load_font_data(include_bytes!("../../fonts/ggsans_bold.ttf").to_vec());
+                .load_font_data(super::fonts::GGSANS.to_vec());
             opt.fontdb_mut()
-                .load_font_data(include_bytes!("../../fonts/seguihis.ttf").to_vec());
+                .load_font_data(super::fonts::SEGUIHIS.to_vec());
             opt.fontdb_mut()
-                .load_font_data(include_bytes!("../../fonts/seguisym.ttf").to_vec());
+                .load_font_data(super::fonts::SEGUISYM.to_vec());
             opt.fontdb_mut()
-                .load_font_data(include_bytes!("../../fonts/NotoSansSC-SemiBold.ttf").to_vec());
+                .load_font_data(super::fonts::NOTO_SANS.to_vec());
 
             let tree = Tree::from_str(&svg, &opt).expect("Invalid SVG");
 
