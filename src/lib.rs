@@ -2,6 +2,7 @@ use error::Error;
 use std::{convert::Infallible, fmt::Display, hash::Hash, path::Path, str::FromStr};
 
 pub mod error;
+mod fonts;
 pub mod game;
 pub mod spreadsheet;
 
