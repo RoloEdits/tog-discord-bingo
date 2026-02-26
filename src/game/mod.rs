@@ -111,7 +111,9 @@ pub trait Game {
             opt.fontdb_mut()
                 .load_font_data(super::fonts::SEGUISYM.to_vec());
             opt.fontdb_mut()
-                .load_font_data(super::fonts::NOTO_SANS.to_vec());
+                .load_font_data(super::fonts::NOTO_SANS_CHINENSE.to_vec());
+            opt.fontdb_mut()
+                .load_font_data(super::fonts::NOTO_SANS_KOREAN.to_vec());
 
             let tree = Tree::from_str(&svg, &opt).expect("Invalid SVG");
 
