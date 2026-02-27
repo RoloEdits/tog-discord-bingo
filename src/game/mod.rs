@@ -148,7 +148,7 @@ pub fn svg(players: &[Player]) -> String {
 
     let x = 50 + name as u32 * px + padding;
 
-    let width = x + 150;
+    let width = x + padding;
     let height = row_height * players.len() as u32;
 
     let mut svg = String::new();
