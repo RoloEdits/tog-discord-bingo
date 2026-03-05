@@ -96,4 +96,23 @@ mod tests {
 
         assert_eq!(270, player.score);
     }
+
+    #[test]
+    fn should_score_with_zero() {
+        let mut game = Normal::from_rows(&[Row {
+            num: 1,
+            name: Name::new(String::from("Rolo"), Color32::from_rgb(0, 0, 0)),
+            guess: String::from("YNNP NYNNP NNYP"),
+            starting_score: 0,
+        }])
+        .unwrap();
+
+        let key = Key::from_str("YYNN NNNN NNYN").unwrap();
+
+        game.play(&key);
+
+        let player = &game.players[0];
+
+        assert_eq!(0, player.score);
+    }
 }
