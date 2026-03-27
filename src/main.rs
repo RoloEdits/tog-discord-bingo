@@ -7,7 +7,7 @@ use bingo::game::normal::Normal;
 use bingo::{Bingo, Key, spreadsheet::Row};
 use eframe::App;
 use eframe::egui::mutex::RwLock;
-use eframe::egui::{Align, Color32, Context, Id, Layout, Modal, Ui};
+use eframe::egui::{Align, Color32, Id, Layout, Modal, Ui};
 use egui_extras::{Column, TableBuilder};
 use mimalloc::MiMalloc;
 use std::str::FromStr;
@@ -75,10 +75,10 @@ enum Rules {
 
 impl App for Application {
     #[allow(clippy::too_many_lines)]
-    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        eframe::egui::CentralPanel::default().show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut eframe::egui::Ui, _frame: &mut eframe::Frame) {
+        eframe::egui::CentralPanel::default().show_inside(ui, |ui| {
             if self.rows.is_empty() {
-                self.file_dialog(ctx, ui);
+                self.file_dialog( ui);
             } else {
                 ui.horizontal(|ui| {
                     let key_label = ui.label("Key: ");
@@ -108,7 +108,7 @@ impl App for Application {
                             // account for correctness.
                             match err {
                                 bingo::error::Error::DoubleGuesser { row, name } => {
-                                    Modal::new(Id::new("DG")).show(ctx, |ui| {
+                                    Modal::new(Id::new("DG")).show(ui.ctx(), |ui| {
                                         ui.set_width(200.0);
                                         ui.heading("Player Guessed More Than Once");
                                         ui.label(format!("{row}: {name}"));
@@ -121,7 +121,7 @@ impl App for Application {
                                     amount,
                                     needed,
                                 } => {
-                                    Modal::new(Id::new("NES")).show(ctx, |ui| {
+                                    Modal::new(Id::new("NES")).show(ui.ctx(), |ui| {
                                         ui.set_width(200.0);
                                         ui.heading("Incorrect Number of Squares");
                                         ui.label(format!("{row}: {name} | Guessed for `{amount}` squares, needs `{needed}` squares "));
@@ -258,7 +258,7 @@ impl App for Application {
 }
 
 impl Application {
-    fn file_dialog(&mut self, ctx: &Context, ui: &mut Ui) {
+    fn file_dialog(&mut self, ui: &mut Ui) {
         ui.vertical_centered(|ui| {
             ui.centered_and_justified(|ui| {
                 if ui.label("Click to open file browser!").clicked() {
@@ -280,7 +280,7 @@ impl Application {
             if path.extension() == Some(OsStr::new("xlsx")) {
                 self.rows = bingo::spreadsheet::read(path);
             } else {
-                let modal = Modal::new(Id::new("IF")).show(ctx, |ui| {
+                let modal = Modal::new(Id::new("IF")).show(ui.ctx(), |ui| {
                     ui.set_width(200.0);
                     ui.heading("Invalid Filetype:");
                     ui.separator();
